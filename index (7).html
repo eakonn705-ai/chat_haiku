@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>掲示板</title>
+<style>
+  /* ===== Reset & Base ===== */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --primary: #4a90d9;
+    --primary-dark: #3178c6;
+    --accent: #27ae60;
+    --danger: #e74c3c;
+    --text: #2c3e50;
+    --text-sub: #7f8c8d;
+    --border: #dde3ea;
+    --radius: 10px;
+    --shadow: 0 2px 12px rgba(0,0,0,.08);
+  }
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ===== Header ===== */
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 0 1rem;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 1.15rem; font-weight: 700; flex: 1; cursor: pointer; }
+  #back-btn {
+    display: none;
+    background: rgba(255,255,255,.2);
+    border: none;
+    color: #fff;
+    padding: .35rem .8rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: .85rem;
+    transition: background .2s;
+  }
+  #back-btn:hover { background: rgba(255,255,255,.35); }
+
+  /* ===== Layout ===== */
+  main { max-width: 780px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  /* ===== Card ===== */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card-title {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .9rem;
+  }
+
+  /* ===== Form ===== */
+  .form-group { margin-bottom: .75rem; }
+  label { display: block; font-size: .82rem; color: var(--text-sub); margin-bottom: .3rem; }
+  input[type="text"], textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: .55rem .75rem;
+    font-size: .95rem;
+    font-family: inherit;
+    color: var(--text);
+    transition: border-color .2s;
+    background: #fafbfc;
+  }
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: #fff;
+  }
+  textarea { resize: vertical; min-height: 80px; }
+
+  /* ===== Buttons ===== */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .55rem 1.2rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .9rem;
+    font-weight: 600;
+    font-family: inherit;
+    transition: opacity .2s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .55; cursor: not-allowed; }
+  .btn-primary  { background: var(--primary); color: #fff; }
+  .btn-primary:hover:not(:disabled)  { background: var(--primary-dark); }
+  .btn-accent   { background: var(--accent); color: #fff; }
+  .btn-accent:hover:not(:disabled)   { background: #219150; }
+
+  /* ===== Thread List ===== */
+  #thread-list { list-style: none; }
+  #thread-list li {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: .65rem;
+    overflow: hidden;
+    transition: transform .15s, box-shadow .15s;
+  }
+  #thread-list li:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(0,0,0,.12); }
+  .thread-link {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .85rem 1.1rem;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .thread-icon {
+    width: 36px; height: 36px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1rem; flex-shrink: 0;
+  }
+  .thread-info { flex: 1; min-width: 0; }
+  .thread-title { font-weight: 600; font-size: .97rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .thread-date  { font-size: .78rem; color: var(--text-sub); margin-top: 2px; }
+  .thread-arrow { color: var(--text-sub); font-size: 1.1rem; }
+
+  /* ===== Post List ===== */
+  #post-list { list-style: none; }
+  .post-item {
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: .85rem 1.1rem;
+    margin-bottom: .6rem;
+  }
+  .post-header {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    margin-bottom: .45rem;
+    flex-wrap: wrap;
+  }
+  .post-num   { font-size: .78rem; color: var(--text-sub); min-width: 2.2em; }
+  .post-name  { font-weight: 700; font-size: .88rem; color: var(--primary); }
+  .post-time  { font-size: .76rem; color: var(--text-sub); margin-left: auto; }
+  .post-body  { font-size: .93rem; line-height: 1.65; white-space: pre-wrap; word-break: break-word; }
+
+  /* ===== States ===== */
+  .state-msg {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-sub);
+    font-size: .9rem;
+  }
+  .spinner {
+    display: inline-block;
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    vertical-align: middle;
+    margin-right: .5rem;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .toast {
+    position: fixed; bottom: 1.5rem; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #2c3e50; color: #fff;
+    padding: .6rem 1.2rem; border-radius: 20px;
+    font-size: .87rem; opacity: 0;
+    transition: opacity .3s, transform .3s;
+    pointer-events: none; z-index: 999;
+    max-width: 90vw; text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--danger); }
+
+  /* ===== Thread header in post view ===== */
+  #thread-header-card { border-left: 4px solid var(--primary); }
+  #thread-header-title { font-size: 1.05rem; font-weight: 700; margin-bottom: .2rem; }
+  #thread-header-date  { font-size: .78rem; color: var(--text-sub); }
+
+  @media (max-width: 480px) {
+    main { padding: 1rem .5rem 4rem; }
+    .card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <button id="back-btn" onclick="showView('threads')">← 一覧へ</button>
+  <h1 onclick="showView('threads')">📋 掲示板</h1>
+</header>
+
+<main>
+  <!-- ========== スレッド一覧ビュー ========== -->
+  <div id="view-threads">
+    <!-- 新規スレッド作成フォーム -->
+    <div class="card">
+      <div class="card-title">✏️ 新規スレッドを立てる</div>
+      <div class="form-group">
+        <label for="new-thread-title">スレッドタイトル</label>
+        <input type="text" id="new-thread-title" placeholder="例: 今日の雑談" maxlength="100">
+      </div>
+      <button class="btn btn-primary" id="create-thread-btn" onclick="createThread()">
+        スレッドを作成
+      </button>
+    </div>
+
+    <!-- スレッド一覧 -->
+    <div id="thread-list-state"></div>
+    <ul id="thread-list"></ul>
+  </div>
+
+  <!-- ========== スレッド内ビュー ========== -->
+  <div id="view-posts" style="display:none">
+    <!-- スレッド情報 -->
+    <div class="card" id="thread-header-card">
+      <div id="thread-header-title"></div>
+      <div id="thread-header-date"></div>
+    </div>
+
+    <!-- 投稿一覧 -->
+    <div id="post-list-state"></div>
+    <ul id="post-list"></ul>
+
+    <!-- 書き込みフォーム -->
+    <div class="card" style="margin-top:1rem">
+      <div class="card-title">💬 書き込む</div>
+      <div class="form-group">
+        <label for="post-name">名前（省略可）</label>
+        <input type="text" id="post-name" placeholder="名無しさん" maxlength="50">
+      </div>
+      <div class="form-group">
+        <label for="post-content">本文</label>
+        <textarea id="post-content" placeholder="ここに書き込み内容を入力..." maxlength="2000"></textarea>
+      </div>
+      <button class="btn btn-accent" id="submit-post-btn" onclick="submitPost()">
+        書き込む
+      </button>
+    </div>
+  </div>
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ============================================================
+//  設定: デプロイ後の GAS URL に書き換えてください
+// ============================================================
+const GAS_URL = "YOUR_GAS_URL";
+
+// ============================================================
+//  状態管理
+// ============================================================
+let currentThreadId   = null;
+let currentThreadData = null;
+
+// ============================================================
+//  XSS 対策: HTML エスケープ
+// ============================================================
+function esc(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+// ============================================================
+//  Toast 通知
+// ============================================================
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast show" + (isError ? " error" : "");
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => { t.className = "toast"; }, 3000);
+}
+
+// ============================================================
+//  ビュー切り替え
+// ============================================================
+function showView(view) {
+  document.getElementById("view-threads").style.display = view === "threads" ? "" : "none";
+  document.getElementById("view-posts").style.display   = view === "posts"   ? "" : "none";
+  document.getElementById("back-btn").style.display     = view === "posts"   ? "" : "none";
+
+  if (view === "threads") {
+    currentThreadId = null;
+    history.pushState({}, "", location.pathname);
+    loadThreads();
+  }
+}
+
+// ============================================================
+//  URL パラメータによる初期ルーティング
+// ============================================================
+function initRoute() {
+  const params = new URLSearchParams(location.search);
+  const tid    = params.get("thread_id");
+  if (tid) openThread({ id: tid, title: "読み込み中…", created_at: "" });
+  else      loadThreads();
+}
+
+// ============================================================
+//  GAS 通信ラッパー
+// ============================================================
+async function gasGet(params) {
+  const url = new URL(GAS_URL);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  const res = await fetch(url.toString(), { redirect: "follow" });
+  return res.json();
+}
+
+async function gasPost(body) {
+  // GAS の CORS 制約回避のため text/plain で送信
+  const res = await fetch(GAS_URL, {
+    method:   "POST",
+    redirect: "follow",
+    headers:  { "Content-Type": "text/plain" },
+    body:     JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ============================================================
+//  スレッド一覧
+// ============================================================
+async function loadThreads() {
+  const stateEl = document.getElementById("thread-list-state");
+  const listEl  = document.getElementById("thread-list");
+  listEl.innerHTML = "";
+  stateEl.innerHTML = `<div class="state-msg"><span class="spinner"></span>読み込み中…</div>`;
+
+  try {
+    const data = await gasGet({});
+    stateEl.innerHTML = "";
+    if (!data.ok) throw new Error(data.error);
+
+    const threads = data.threads || [];
+    if (threads.length === 0) {
+      stateEl.innerHTML = `<div class="state-msg">スレッドがまだありません。最初のスレッドを立てましょう！</div>`;
+      return;
+    }
+
+    listEl.innerHTML = threads.map(t => `
+      <li>
+        <div class="thread-link" onclick="openThread(${JSON.stringify(t).replace(/"/g,'&quot;')})">
+          <div class="thread-icon">💬</div>
+          <div class="thread-info">
+            <div class="thread-title">${esc(t.title)}</div>
+            <div class="thread-date">${esc(t.created_at)}</div>
+          </div>
+          <span class="thread-arrow">›</span>
+        </div>
+      </li>
+    `).join("");
+  } catch (e) {
+    stateEl.innerHTML = `<div class="state-msg">⚠️ 読み込みに失敗しました: ${esc(e.message)}</div>`;
+  }
+}
+
+// ============================================================
+//  スレッド作成
+// ============================================================
+async function createThread() {
+  const titleEl = document.getElementById("new-thread-title");
+  const btn     = document.getElementById("create-thread-btn");
+  const title   = titleEl.value.trim();
+  if (!title) { showToast("タイトルを入力してください", true); return; }
+
+  btn.disabled = true;
+  btn.textContent = "作成中…";
+  try {
+    const data = await gasPost({ action: "create_thread", title });
+    if (!data.ok) throw new Error(data.error);
+    titleEl.value = "";
+    showToast("スレッドを作成しました！");
+    loadThreads();
+  } catch (e) {
+    showToast("エラー: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "スレッドを作成";
+  }
+}
+
+// ============================================================
+//  スレッド内画面を開く
+// ============================================================
+function openThread(thread) {
+  currentThreadId   = thread.id;
+  currentThreadData = thread;
+
+  document.getElementById("thread-header-title").textContent = thread.title;
+  document.getElementById("thread-header-date").textContent  = thread.created_at ? `作成日時: ${thread.created_at}` : "";
+
+  history.pushState({}, "", `?thread_id=${encodeURIComponent(thread.id)}`);
+  showView("posts");
+  loadPosts();
+}
+
+// ============================================================
+//  投稿一覧
+// ============================================================
+async function loadPosts() {
+  const stateEl = document.getElementById("post-list-state");
+  const listEl  = document.getElementById("post-list");
+  listEl.innerHTML = "";
+  stateEl.innerHTML = `<div class="state-msg"><span class="spinner"></span>読み込み中…</div>`;
+
+  try {
+    const data = await gasGet({ action: "get_posts", thread_id: currentThreadId });
+    stateEl.innerHTML = "";
+    if (!data.ok) throw new Error(data.error);
+
+    // スレッドタイトルが取れた場合は更新
+    if (data.thread) {
+      document.getElementById("thread-header-title").textContent = data.thread.title;
+      document.getElementById("thread-header-date").textContent  = `作成日時: ${data.thread.created_at}`;
+    }
+
+    const posts = data.posts || [];
+    if (posts.length === 0) {
+      stateEl.innerHTML = `<div class="state-msg">まだ投稿がありません。最初の書き込みをしましょう！</div>`;
+      return;
+    }
+
+    listEl.innerHTML = posts.map((p, i) => `
+      <li class="post-item">
+        <div class="post-header">
+          <span class="post-num">${i + 1}</span>
+          <span class="post-name">${esc(p.name || "名無しさん")}</span>
+          <span class="post-time">${esc(p.timestamp)}</span>
+        </div>
+        <div class="post-body">${esc(p.content)}</div>
+      </li>
+    `).join("");
+  } catch (e) {
+    stateEl.innerHTML = `<div class="state-msg">⚠️ 読み込みに失敗しました: ${esc(e.message)}</div>`;
+  }
+}
+
+// ============================================================
+//  投稿（書き込み）
+// ============================================================
+async function submitPost() {
+  const nameEl    = document.getElementById("post-name");
+  const contentEl = document.getElementById("post-content");
+  const btn       = document.getElementById("submit-post-btn");
+  const content   = contentEl.value.trim();
+  if (!content) { showToast("本文を入力してください", true); return; }
+
+  btn.disabled = true;
+  btn.textContent = "送信中…";
+  try {
+    const data = await gasPost({
+      action:    "create_post",
+      thread_id: currentThreadId,
+      name:      nameEl.value.trim() || "名無しさん",
+      content,
+    });
+    if (!data.ok) throw new Error(data.error);
+    contentEl.value = "";
+    showToast("書き込みました！");
+    loadPosts();
+  } catch (e) {
+    showToast("エラー: " + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "書き込む";
+  }
+}
+
+// ============================================================
+//  ブラウザの戻るボタン対応
+// ============================================================
+window.addEventListener("popstate", () => {
+  const tid = new URLSearchParams(location.search).get("thread_id");
+  if (tid) openThread({ id: tid, title: "読み込み中…", created_at: "" });
+  else      showView("threads");
+});
+
+// ============================================================
+//  初期化
+// ============================================================
+initRoute();
+</script>
+</body>
+</html>
