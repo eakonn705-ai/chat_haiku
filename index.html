@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chat_Haiku</title>
+<title>反学友会 掲示板！</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap');
 
@@ -407,6 +407,126 @@ textarea { resize: vertical; min-height: 90px; line-height: 1.7; }
 .post-item:hover .post-reply-btn { opacity: 1; }
 .post-reply-btn:hover { color: var(--gold); background: var(--gold-dim); }
 
+/* ===== 組織AI リンクボタン ===== */
+#org-ai-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 1rem;
+  padding: 1.15rem 1.4rem;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+
+  /* ガラスモーフィズム + ゴールドグラデ枠 */
+  background: linear-gradient(
+    135deg,
+    rgba(201,169,110,.13) 0%,
+    rgba(120,90,40,.07) 50%,
+    rgba(201,169,110,.10) 100%
+  );
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  box-shadow:
+    0 0 0 1px rgba(201,169,110,.35),
+    0 4px 24px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.05);
+
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1),
+              box-shadow .22s ease,
+              background .22s ease;
+}
+
+#org-ai-btn::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201,169,110,.06) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform .6s ease;
+}
+#org-ai-btn:hover::before { transform: translateX(100%); }
+
+#org-ai-btn:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    0 0 0 1px rgba(201,169,110,.6),
+    0 8px 32px rgba(201,169,110,.18),
+    0 2px 8px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+#org-ai-btn:active {
+  transform: translateY(0) scale(.985);
+  transition-duration: .08s;
+}
+
+/* グロー（背景の光） */
+.org-ai-glow {
+  position: absolute;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,169,110,.18) 0%, transparent 70%);
+  left: -20px; top: 50%; transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* アイコン */
+.org-ai-icon {
+  font-size: 2rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 6px rgba(201,169,110,.5));
+  flex-shrink: 0;
+  z-index: 1;
+  transition: transform .22s cubic-bezier(.34,1.56,.64,1);
+}
+#org-ai-btn:hover .org-ai-icon { transform: rotate(-8deg) scale(1.12); }
+
+/* テキスト */
+.org-ai-label {
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  flex: 1;
+  z-index: 1;
+}
+.org-ai-sub {
+  font-family: var(--font-mono);
+  font-size: .6rem;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: .7;
+}
+.org-ai-main {
+  font-family: var(--font-serif, serif);
+  font-size: 1.15rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: #f0e6cc;
+  text-shadow: 0 0 12px rgba(201,169,110,.4);
+}
+
+/* 矢印 */
+.org-ai-arrow {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--gold);
+  opacity: .7;
+  z-index: 1;
+  transition: transform .22s ease, opacity .22s ease;
+  flex-shrink: 0;
+}
+#org-ai-btn:hover .org-ai-arrow { transform: translateX(5px); opacity: 1; }
+
 /* ===== STATES ===== */
 .state-msg {
   text-align: center; padding: 3rem 1rem;
@@ -512,12 +632,29 @@ textarea { resize: vertical; min-height: 90px; line-height: 1.7; }
     <div class="pulse-dot"></div>
     <span class="label">LIVE</span>
   </div>
-  <div class="header-kigo">一期一会</div>
+  <div class="header-kigo">千差万別</div>
 </header>
 
 <main>
   <!-- スレッド一覧ビュー -->
   <div id="view-threads">
+
+    <!-- ========== 組織AI リンクボタン ========== -->
+    <!-- ↓↓↓ 外部リンクURLをここに貼るだけでOK ↓↓↓ -->
+    <script>const ORG_AI_URL = "https://gemini.google.com/gem/c3eb0ddb7964";</script>
+    <!-- ↑↑↑ ここだけ変更すればOK ↑↑↑ -->
+
+    <a id="org-ai-btn" href="#" target="_blank" rel="noopener noreferrer"
+       onclick="event.preventDefault(); window.open(ORG_AI_URL,'_blank','noopener,noreferrer')">
+      <span class="org-ai-glow"></span>
+      <span class="org-ai-icon">🤖</span>
+      <span class="org-ai-label">
+        <span class="org-ai-sub">powered by AI</span>
+        <span class="org-ai-main">組織AIに会う</span>
+      </span>
+      <span class="org-ai-arrow">→</span>
+    </a>
+
     <div class="card">
       <div class="card-eyebrow">NEW THREAD</div>
       <div class="form-group">
@@ -593,8 +730,8 @@ const GAS_URL  = "https://script.google.com/macros/s/AKfycbw5i-9heXNKSEuLk_Jt59m
 const PASSCODE = "KasaneTeto";           // ← パスワードをここで設定（数字・文字・記号なんでもOK）
 
 // 自動更新の間隔（ミリ秒）
-const POLL_THREADS_MS = 10000;  // スレッド一覧：10秒ごと
-const POLL_POSTS_MS   = 10000;  // 投稿一覧：10秒ごと
+const POLL_THREADS_MS = 10000;  // スレッド一覧：60秒ごと
+const POLL_POSTS_MS   = 10000;  // 投稿一覧：60秒ごと
 
 // ============================================================
 //  パスコード認証
